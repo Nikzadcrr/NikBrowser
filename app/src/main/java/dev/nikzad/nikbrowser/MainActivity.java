@@ -25,6 +25,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
     private final List<GeckoSession> tabs = new ArrayList<>();
     private final Map<GeckoSession, String> lastUrl = new HashMap<>();
+    private final Map<GeckoSession, Boolean> canGoBackMap = new HashMap<>();
     private final Handler main = new Handler(Looper.getMainLooper());
 
     private GeckoSession attached;
@@ -108,7 +110,9 @@ public class MainActivity extends AppCompatActivity {
         ImageButton mailBtn = findViewById(R.id.btn_mail);
 
         back.setOnClickListener(v -> {
-            if (attached != null) attached.goBack();
+            if (attached != null && Boolean.TRUE.equals(canGoBackMap.get(attached))) {
+                attached.goBack();
+            }
         });
         fwd.setOnClickListener(v -> {
             if (attached != null) attached.goForward();
@@ -127,8 +131,8 @@ public class MainActivity extends AppCompatActivity {
     private void installBuiltInExtension() {
         runtime.getWebExtensionController().ensureBuiltIn(EXT_URI, EXT_ID).then(
                 (WebExtension ext) -> {
-                    if (ext != null && ext.getMetaData() != null) {
-                        extBaseUri = ext.getMetaData().getBaseURI();
+                    if (ext != null && ext.metaData != null) {
+                        extBaseUri = ext.metaData.baseURI;
                         Log.i(TAG, "built-in extension ready: " + extBaseUri);
                         main.post(this::openMailPanel);
                     }
@@ -258,7 +262,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (attached != null && attached.goBack()) {
+        if (attached != null && Boolean.TRUE.equals(canGoBackMap.get(attached))) {
+            attached.goBack();
             return;
         }
         if (tabs.size() > 1) {
@@ -300,8 +305,12 @@ public class MainActivity extends AppCompatActivity {
         }
 
         // ---- NavigationDelegate ----
-        public GeckoSession onNewSession(GeckoSession parent, String uri) {
-            return createTab(uri);
+        public void onCanGoBack(GeckoSession session, boolean canGoBack) {
+            canGoBackMap.put(session, canGoBack);
+        }
+
+        public GeckoResult<GeckoSession> onNewSession(GeckoSession parent, String uri) {
+            return GeckoResult.fromValue(createTab(uri));
         }
 
         public void onExternalResponse(GeckoSession session, WebResponse response) {
