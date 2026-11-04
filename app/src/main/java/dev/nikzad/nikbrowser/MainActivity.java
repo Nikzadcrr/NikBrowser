@@ -132,7 +132,8 @@ public class MainActivity extends AppCompatActivity {
         runtime.getWebExtensionController().ensureBuiltIn(EXT_URI, EXT_ID).then(
                 (WebExtension ext) -> {
                     if (ext != null && ext.metaData != null) {
-                        extBaseUri = ext.metaData.getBaseURI();
+                        String b = ext.metaData.baseUrl;
+                        extBaseUri = b.endsWith("/") ? b : b + "/";
                         Log.i(TAG, "built-in extension ready: " + extBaseUri);
                         main.post(this::openMailPanel);
                     }
