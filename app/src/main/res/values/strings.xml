@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Nik Browser</string>
+    <string name="url_hint">جست‌وجو یا وارد کردن آدرس</string>
+    <string name="mail_btn">ایمیل موقت</string>
+    <string name="tabs_btn">تب‌ها</string>
+    <string name="back_btn">قبلی</string>
+    <string name="fwd_btn">بعدی</string>
+    <string name="reload_btn">بارگذاری مجدد</string>
+    <string name="new_tab">تب جدید</string>
+    <string name="close_tab">بستن تب فعلی</string>
+    <string name="download_started">دانلود آغاز شد</string>
+    <string name="ext_failed">افزونهٔ داخلی نصب نشد</string>
+    <string name="loading_home">در حال آماده‌سازی…</string>
+</resources>

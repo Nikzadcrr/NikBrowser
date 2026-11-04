@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0B1220">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:background="#101A2E">
+
+        <EditText
+            android:id="@+id/url_box"
+            android:layout_width="0dp"
+            android:layout_height="42dp"
+            android:layout_weight="1"
+            android:background="@drawable/bg_url"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:textColor="#E2E8F0"
+            android:textColorHint="#64748B"
+            android:textSize="14sp"
+            android:hint="@string/url_hint"
+            android:imeOptions="actionGo"
+            android:inputType="textUri"
+            android:maxLines="1"
+            android:importantForAutofill="no" />
+
+        <ImageButton
+            android:id="@+id/btn_back"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:src="@drawable/ic_back"
+            android:tint="#94A3B8"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/back_btn" />
+
+        <ImageButton
+            android:id="@+id/btn_fwd"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:src="@drawable/ic_forward"
+            android:tint="#94A3B8"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/fwd_btn" />
+
+        <ImageButton
+            android:id="@+id/btn_reload"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:src="@drawable/ic_reload"
+            android:tint="#94A3B8"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/reload_btn" />
+
+        <ImageButton
+            android:id="@+id/btn_tabs"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:src="@drawable/ic_tabs"
+            android:tint="#94A3B8"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/tabs_btn" />
+
+        <ImageButton
+            android:id="@+id/btn_mail"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:src="@drawable/ic_mail"
+            android:tint="#34D399"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/mail_btn" />
+    </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:max="100"
+        android:visibility="gone"
+        android:progressTint="#7DD3FC" />
+
+    <org.mozilla.geckoview.GeckoView
+        android:id="@+id/gecko_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</LinearLayout>

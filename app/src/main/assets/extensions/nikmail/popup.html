@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>سوییچر مولتی‌اکانت + ایمیل موقت</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Top Header -->
+    <header class="header">
+      <div class="brand">
+        <img src="icons/icon48.png" alt="Logo" class="brand-logo" />
+        <div>
+          <h1 class="brand-title">سوییچر اکانت + ایمیل آنی</h1>
+          <div class="domain-row">
+            <span id="domainBadge" class="domain-badge">در حال بررسی...</span>
+            <span id="countBadge" class="count-badge">۰ اکانت</span>
+            <span id="isoCountBadge" class="iso-count-badge hidden">
+              <span data-icon="lock" data-icon-class="ic ic-sm"></span>
+              <span id="isoCountText">۰ تب باز</span>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="quickSearchBtn" class="icon-btn" title="جست‌وجوی سریع اکانت‌ها (Alt+Shift+F)">
+          <span data-icon="search"></span>
+        </button>
+        <button id="toggleSettingsBtn" class="icon-btn" title="تنظیمات و پشتیبان‌گیری">
+          <span data-icon="settings"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button id="tabAccountsBtn" class="nav-tab active">
+        <span data-icon="users"></span>
+        اکانت‌ها و تب‌ها
+      </button>
+      <button id="tabMailBtn" class="nav-tab">
+        <span data-icon="mail"></span>
+        ایمیل موقت
+        <span id="mailUnreadBadge" class="nav-badge hidden">۰</span>
+      </button>
+    </nav>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Settings & Backup Drawer (Global) -->
+    <section id="settingsPanel" class="card settings-card hidden">
+      <div class="section-header">
+        <span><span data-icon="settings"></span> تنظیمات و پشتیبان‌گیری</span>
+        <button id="closeSettingsBtn" class="text-btn"><span data-icon="x" data-icon-class="ic ic-sm"></span> بستن</button>
+      </div>
+
+      <label class="toggle-row">
+        <div>
+          <div class="toggle-title">دکمه شناور روی صفحه</div>
+          <div class="toggle-desc">نمایش نوار «بعدی» و «+تب همزمان» پایین صفحه</div>
+        </div>
+        <input type="checkbox" id="chkFloatingWidget" />
+      </label>
+
+      <label class="toggle-row">
+        <div>
+          <div class="toggle-title">بروزرسانی خودکار کوکی اکانت فعال</div>
+          <div class="toggle-desc">ذخیره توکن‌های تمدیدشده پیش از جابه‌جایی</div>
+        </div>
+        <input type="checkbox" id="chkAutoSync" />
+      </label>
+
+      <label class="toggle-row">
+        <div>
+          <div class="toggle-title">جابه‌جایی حافظه مرورگر (Storage)</div>
+          <div class="toggle-desc">ایزوله‌سازی و جایگزینی localStorage و sessionStorage</div>
+        </div>
+        <input type="checkbox" id="chkIncludeStorage" />
+      </label>
+
+      <label class="toggle-row">
+        <div>
+          <div class="toggle-title">اعلان دسکتاپ پیام و کد تأیید</div>
+          <div class="toggle-desc">حتی وقتی پنجره افزونه بسته است، ورود پیام یا OTP اعلان بدهد</div>
+        </div>
+        <input type="checkbox" id="chkDesktopNotif" checked />
+      </label>
+
+      <div class="backup-box">
+        <div class="backup-title">پشتیبان‌گیری کامل اکانت‌ها + ایمیل‌ها (JSON)</div>
+        <div class="backup-actions">
+          <button id="exportSiteBtn" class="btn btn-secondary btn-sm"><span data-icon="upload" data-icon-class="ic ic-sm"></span> بکاپ این سایت</button>
+          <button id="exportAllBtn" class="btn btn-secondary btn-sm"><span data-icon="package" data-icon-class="ic ic-sm"></span> بکاپ کامل همه</button>
+          <button id="importBtn" class="btn btn-secondary btn-sm"><span data-icon="download" data-icon-class="ic ic-sm"></span> بازیابی فایل</button>
+          <input type="file" id="importFileInput" accept=".json,application/json" class="hidden" />
+        </div>
+      </div>
+
+      <div class="shortcut-hint">
+        <span data-icon="keyboard" data-icon-class="ic ic-sm"></span>
+        <span>میانبر: <kbd>Alt + Shift + F</kbd> جست‌وجوی سریع | <kbd>Alt + Shift + S</kbd> بعدی | <kbd>Alt + Shift + A</kbd> قبلی</span>
+      </div>
+    </section>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 1: ACCOUNTS & SIMULTANEOUS MULTI-TAB                          -->
+    <!-- ================================================================== -->
+    <div id="accountsView">
+      <!-- Unsupported Page State -->
+      <section id="unsupportedState" class="card unsupported-card hidden">
+        <div class="unsupported-icon"><span data-icon="globe"></span></div>
+        <h2>یک وب‌سایت معتبر باز کنید</h2>
+        <p>
+          برای ذخیره یا سوییچ اکانت، وارد سایت مورد نظر شوید. (بخش «ایمیل موقت» در همین‌جا هم فعال است!)
+        </p>
+      </section>
+
+      <main id="mainContent" class="main-content hidden">
+        <div id="googleWarning" class="warning-banner hidden">
+          <span data-icon="alert-triangle"></span>
+          <span><strong>توجه:</strong> دامنه‌های گوگل از کوکی یکپارچه <code>google.com</code> استفاده می‌کنند. برای گوگل از «تب همزمان» یا پروفایل مجزای کروم استفاده کنید.</span>
+        </div>
+
+        <!-- Switcher & Multi-Tab Launcher -->
+        <section class="card switcher-card">
+          <div class="active-status-row">
+            <span class="status-label">نشست این تب:</span>
+            <span id="activeStatusText" class="status-value">نشست جدید (ذخیره‌نشده)</span>
+          </div>
+
+          <div class="switch-buttons">
+            <button id="nextAccountBtn" class="btn btn-primary btn-hero">
+              <span data-icon="zap"></span>
+              <span>سوییچ به اکانت بعدی (همین تب)</span>
+            </button>
+            <button id="prevAccountBtn" class="btn btn-secondary btn-prev" title="بازگشت به اکانت قبلی">
+              <span data-icon="skip-back"></span>
+              <span>قبلی</span>
+            </button>
+          </div>
+
+          <div class="multi-open-box">
+            <div class="multi-open-row">
+              <button id="openBatchBtn" class="btn btn-cyan">
+                <span data-icon="layout-grid"></span>
+                <span>باز کردن همزمان در تب‌های جدا</span>
+              </button>
+              <select id="batchCountSelect" class="select-input" title="تعداد تب‌های همزمان">
+                <option value="3">۳ اکانت</option>
+                <option value="5" selected>۵ اکانت</option>
+                <option value="10">۱۰ اکانت</option>
+                <option value="all">همه اکانت‌ها</option>
+              </select>
+            </div>
+            <div class="multi-hint">
+              هر تب کوکی و حافظه کاملاً جداگانه دارد تا همزمان با چند اکانت کار کنید.
+            </div>
+          </div>
+        </section>
+
+        <!-- Save Current & New Clean Session Card -->
+        <section class="card save-card">
+          <div class="inputs-grid">
+            <input
+              type="text"
+              id="accountNameInput"
+              class="input"
+              placeholder="نام اکانت (مثلاً اکانت ۱)"
+              maxlength="45"
+            />
+            <input
+              type="text"
+              id="accountNoteInput"
+              class="input"
+              placeholder="یادداشت / ایمیل (اختیاری)"
+              maxlength="60"
+            />
+          </div>
+          <label class="link-mail-row" id="linkActiveMailRow">
+            <input type="checkbox" id="chkLinkActiveMail" checked />
+            <span id="linkActiveMailLabel">اتصال خودکار ایمیل موقت فعال به این اکانت</span>
+          </label>
+          <div class="save-buttons">
+            <button id="saveCurrentBtn" class="btn btn-success">
+              <span data-icon="save"></span>
+              <span>ذخیره اکانت فعلی</span>
+            </button>
+            <button
+              id="newSessionBtn"
+              class="btn btn-outline"
+              title="کوکی‌های تب اصلی را پاک می‌کند تا اکانت بعدی را لاگین و ذخیره کنید"
+            >
+              <span data-icon="plus"></span>
+              <span>نشست جدید (لاگین بعدی)</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Accounts List -->
+        <section class="list-section">
+          <div class="list-toolbar">
+            <input
+              type="text"
+              id="searchInput"
+              class="input input-search"
+              placeholder="جستجو در بین اکانت‌ها..."
+            />
+            <select id="sortSelect" class="select-input sort-select" title="مرتب‌سازی اکانت‌ها">
+              <option value="recent" selected>آخرین استفاده</option>
+              <option value="name">بر اساس نام</option>
+              <option value="created">جدیدترین ساخته‌شده</option>
+            </select>
+          </div>
+          <div id="labelFilterRow" class="label-filter-row hidden"></div>
+
+          <div id="emptyAccountsState" class="empty-state hidden">
+            <div class="empty-title">هنوز اکانتی برای این سایت ذخیره نشده است</div>
+            <ol class="steps-list">
+              <li>در صورت نیاز از تب <strong>«ایمیل موقت»</strong> یک ایمیل بسازید و کد تأیید را بگیرید.</li>
+              <li>پس از ورود به اکانت در سایت، <strong>«ذخیره اکانت فعلی»</strong> را بزنید.</li>
+              <li>با <strong>«نشست جدید»</strong> اکانت‌های بعدی را بسازید و همزمان در تب‌های جدا باز کنید!</li>
+            </ol>
+          </div>
+
+          <div id="accountsList" class="accounts-list"></div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- VIEW 2: TEMP MAIL — Instant Mail app-style UI (Dark Glass)          -->
+    <!-- ================================================================== -->
+    <div id="mailView" class="mail-view hidden">
+      <div class="im-app">
+        <!-- App header -->
+        <div class="im-header">
+          <div class="im-logo"><span data-icon="mail"></span></div>
+          <div class="im-header-texts">
+            <div class="im-app-title">Instant Mail</div>
+            <div class="im-app-sub">ایمیل موقت آنی — همان سرویس رسمی اپ</div>
+          </div>
+        </div>
+
+        <!-- Active mailbox card (app home style) -->
+        <section id="activeMailboxCard" class="im-email-card hidden">
+          <div class="im-email-label">ایمیل شما</div>
+          <div class="im-email-box">
+            <span id="currentEmailText" class="im-email-text">---</span>
+          </div>
+          <div class="im-email-actions">
+            <button id="copyEmailBtn" class="im-btn im-btn-primary">
+              <span data-icon="copy"></span>
+              <span>کپی ایمیل</span>
+            </button>
+            <button id="fillEmailBtn" class="im-btn im-btn-outline" title="درج خودکار در کادر ایمیل صفحه باز">
+              <span data-icon="pen"></span>
+              <span>درج در سایت</span>
+            </button>
+            <button id="newMailBtn" class="im-btn im-btn-outline" title="ساخت یا تغییر ایمیل">
+              <span data-icon="sparkles"></span>
+              <span>ایمیل جدید</span>
+            </button>
+          </div>
+          <div class="im-email-meta" id="activeMailMeta">
+            آدرس به‌صورت خودکار ساخته می‌شود، حدود ۲ روز اعتبار دارد و قابل بازیابی نیست.
+          </div>
+          <div class="im-history-row">
+            <span class="im-history-label">صندوق فعال:</span>
+            <select id="mailboxHistorySelect" class="im-select im-history-select"></select>
+            <button id="deleteMailboxBtn" class="im-mini-danger" title="حذف این ایمیل از لیست">
+              <span data-icon="trash"></span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Create panel (app create sheet) -->
+        <section id="mailCreateCard" class="im-create-card">
+          <div class="im-create-head">
+            <div class="im-section-title">نوع ایمیلی که می‌خواهی بسازی را انتخاب کن</div>
+            <button id="closeCreateCardBtn" class="im-close-btn hidden" title="بستن">
+              <span data-icon="x"></span>
+            </button>
+          </div>
+
+          <div id="mailServiceChips" class="im-chips-row"></div>
+
+          <div id="imGroupTabsBox" class="im-group-tabs">
+            <button type="button" data-group="random" class="im-group-tab">
+              <span data-icon="shuffle"></span>
+              تصادفی
+            </button>
+            <button type="button" data-group="domain" class="im-group-tab active">
+              <span data-icon="globe"></span>
+              دامنه
+            </button>
+            <button type="button" data-group="popular" class="im-group-tab">
+              <span data-icon="star"></span>
+              محبوب
+            </button>
+          </div>
+
+          <div id="imDomainGrid" class="im-domain-grid"></div>
+
+          <input
+            type="text"
+            id="mailCustomUser"
+            class="im-input"
+            placeholder="نام دلخواه (خالی = تصادفی)"
+            maxlength="28"
+          />
+
+          <button id="createMailBtn" class="im-btn im-btn-primary im-create-btn">
+            <span data-icon="sparkles"></span>
+            <span>ساخت ایمیل جدید</span>
+          </button>
+          <div class="im-disclaimer">
+            آدرس ایمیل به‌صورت تصادفی ساخته می‌شود، حدود ۲ روز دوام دارد و قابل بازیابی نیست. برای اکانت‌های مهم استفاده نکنید.
+          </div>
+        </section>
+
+        <!-- Live Inbox (app inbox style) -->
+        <section id="inboxSection" class="im-inbox hidden">
+          <div class="im-inbox-header">
+            <span class="im-inbox-title"><span data-icon="inbox"></span> صندوق ورودی</span>
+            <span id="inboxPollStatus" class="im-live-dot" title="بروزرسانی خودکار هر ۵ ثانیه">زنده</span>
+            <button id="refreshInboxBtn" class="im-mini-refresh" title="بررسی پیام جدید">
+              <span data-icon="refresh"></span>
+            </button>
+          </div>
+
+          <div id="emptyInboxState" class="im-empty-inbox">
+            صندوق ورودی شما خالی است
+            <div class="im-empty-sub">در انتظار ایمیل یا کد تأیید... (هر ۵ ثانیه خودکار چک می‌شود)</div>
+          </div>
+
+          <div id="messagesList" class="im-msg-list"></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Edit Account Modal -->
+    <div id="editModal" class="modal-backdrop hidden">
+      <div class="modal">
+        <div class="modal-title"><span data-icon="pen"></span> ویرایش مشخصات اکانت</div>
+        <input type="text" id="editNameInput" class="input" placeholder="نام اکانت" maxlength="45" />
+        <input type="text" id="editNoteInput" class="input" placeholder="یادداشت یا ایمیل" maxlength="60" />
+        <div class="edit-labels-box">
+          <div class="edit-labels-title"><span data-icon="tag" data-icon-class="ic ic-sm"></span> برچسب‌ها و پین</div>
+          <div id="editLabelPicker" class="edit-label-picker"></div>
+          <div class="edit-custom-row">
+            <input type="text" id="editCustomLabelInput" class="input input-sm" placeholder="برچسب دلخواه..." maxlength="18" />
+            <button id="addCustomLabelBtn" class="btn btn-secondary btn-sm"><span data-icon="plus" data-icon-class="ic ic-sm"></span> افزودن</button>
+          </div>
+        </div>
+        <div class="color-picker" id="editColorPicker"></div>
+        <div class="modal-actions">
+          <button id="saveEditBtn" class="btn btn-primary btn-sm">ذخیره تغییرات</button>
+          <button id="cancelEditBtn" class="btn btn-secondary btn-sm">انصراف</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Read Email Modal -->
+    <div id="mailReadModal" class="modal-backdrop hidden">
+      <div class="modal modal-mail">
+        <div class="modal-header-row">
+          <div id="mailModalSubject" class="modal-title">موضوع پیام</div>
+          <button id="closeMailModalBtn" class="text-btn"><span data-icon="x" data-icon-class="ic ic-sm"></span> بستن</button>
+        </div>
+        <div id="mailModalFrom" class="mail-from-meta"></div>
+
+        <!-- Instant OTP Banner inside Modal -->
+        <div id="mailModalOtpBox" class="otp-banner hidden">
+          <span>کد تأیید شناسایی شد: <strong id="mailModalOtpCode"></strong></span>
+          <button id="copyModalOtpBtn" class="btn btn-success btn-sm"><span data-icon="copy" data-icon-class="ic ic-sm"></span> کپی و درج کد</button>
+        </div>
+
+        <!-- Extracted Verification Links -->
+        <div id="mailModalLinks" class="mail-links-box hidden"></div>
+
+        <!-- Safe Plain Text Body -->
+        <div id="mailModalBody" class="mail-body-box"></div>
+
+        <div class="modal-actions">
+          <button id="deleteMessageBtn" class="btn btn-secondary btn-sm"><span data-icon="trash" data-icon-class="ic ic-sm"></span> حذف این پیام</button>
+          <button id="closeMailModalBtn2" class="btn btn-primary btn-sm">بستن</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

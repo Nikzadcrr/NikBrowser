@@ -1,0 +1,92 @@
+{
+  "manifest_version": 3,
+  "name": "سوییچر مولتی‌اکانت + ایمیل موقت (AI Multi-Account & Mail)",
+  "short_name": "Multi-Account AI",
+  "version": "4.0.0",
+  "description": "ذخیره ۳۰+ اکانت در هر سایت، باز کردن همزمان در تب‌های مجزا، جابه‌جایی ۱-کلیکی و موتور ایمیل موقت با ساخت آنی و دریافت آنی کد تأیید",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "nikmail@nikzad.dev",
+      "strict_min_version": "128.0"
+    }
+  },
+  "permissions": [
+    "cookies",
+    "storage",
+    "unlimitedStorage",
+    "tabs",
+    "scripting",
+    "declarativeNetRequest",
+    "webRequest",
+    "notifications",
+    "alarms"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "سوییچر و مولتی‌اکانت همزمان",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "isolated-preload.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "quick-switch-search": {
+      "suggested_key": {
+        "default": "Alt+Shift+F",
+        "mac": "Alt+Shift+F"
+      },
+      "description": "جست‌وجوی سریع اکانت‌ها و سوییچ یا باز کردن در تب جدید"
+    },
+    "switch-next-account": {
+      "suggested_key": {
+        "default": "Alt+Shift+S",
+        "mac": "Alt+Shift+S"
+      },
+      "description": "جابه‌جایی سریع به اکانت بعدی در تب فعلی"
+    },
+    "switch-prev-account": {
+      "suggested_key": {
+        "default": "Alt+Shift+A",
+        "mac": "Alt+Shift+A"
+      },
+      "description": "بازگشت به اکانت قبلی در تب فعلی"
+    }
+  }
+}
